@@ -576,11 +576,27 @@ class _DevicePage1State extends State<DevicePage1> {
         body: Column(
           children: [
             Container(
-              color: Colors.,
+              color: Colors.lightGreen,
               width: 300,
               height: 300,
+              child: CustomPaint(
+                foregroundPainter: LinePainter(),
+              ),
             )
           ],
         ));
+  }
+}
+
+class LinePainter extends CustomPainter {
+  @override
+  void paint(Canvas canvas, Size size) {
+    
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) {
+   
+    return false;
   }
 }

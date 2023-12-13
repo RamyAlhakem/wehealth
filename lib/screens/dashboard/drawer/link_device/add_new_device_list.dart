@@ -542,18 +542,18 @@ class _WeightScaleState extends State<WeightScale> {
                         timeout: const Duration(seconds: 15));
                     FlutterBluePlus.scanResults.listen((results) {
                       for (ScanResult r in results) {
-                        if (!devices.contains(r.device)) {
-                          setState(() {
-                            devices.add(r.device);
-                          });
-                        }
-                        // if (r.device.advName.startsWith("ADORE1")) {
+                        // if (!devices.contains(r.device)) {
                         //   setState(() {
-                        //     if (!devices.contains(r.device)) {
-                        //       devices.add(r.device);
-                        //     }
+                        //     devices.add(r.device);
                         //   });
                         // }
+                        if (r.device.advName.startsWith("ADORE1")) {
+                          setState(() {
+                            if (!devices.contains(r.device)) {
+                              devices.add(r.device);
+                            }
+                          });
+                        }
                       }
                     });
                   },
