@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>NSLocationWhenInUseUsageDescription</key>
+    <string>Location permission is required for our WeHealth app to get BLE scan result. Medical devices e.g. blood glucose meters, can be paired with your mobile device which enables data to be transferred to our WeHealth apps</string>
+    <key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
+    <string>It is mendatory for our WeHealth app to have location permissions in order to work with Bluetooth devices.</string>
+    <key>NSLocationUsageDescription</key>
+    <string>It is mendatory for our WeHealth app to have location permissions in order to work with Bluetooth devices.</string>
+    <key>NSLocationAlwaysUsageDescription</key>
+    <string>Location permission is required for our WeHealth app to get BLE scan result. Medical devices e.g. blood glucose meters, can be paired with your mobile device which enables data to be transferred to our WeHealth apps</string>
+	<key>LSApplicationCategoryType</key>
+	<string></string>
+	<key>NSHealthClinicalHealthRecordsShareUsageDescription</key>
+	<string>For future and ferther uses of your previous medical recrord to show the another doctor it might help you.</string>
+	<key>NSHealthShareUsageDescription</key>
+	<string>We will sync your data with the Apple Health app to give you better insights</string>
+	<key>NSHealthUpdateUsageDescription</key>
+	<string>We will sync your data with the Apple Health app to give you better insights</string>
+	<key>NSBluetoothPeripheralUsageDescription</key>
+	<string>This app asks you to enable Bluetooth to connect health related devices.</string>
+	<key>NSBluetoothAlwaysUsageDescription</key>
+	<string>This app asks you to enable Bluetooth to connect health related devices.</string>
+	<key>CADisableMinimumFrameDurationOnPhone</key>
+	<true/>
+	<key>CFBundleDevelopmentRegion</key>
+	<string>$(DEVELOPMENT_LANGUAGE)</string>
+	<key>CFBundleDisplayName</key>
+	<string>WeHealth</string>
+	<key>CFBundleExecutable</key>
+	<string>$(EXECUTABLE_NAME)</string>
+	<key>CFBundleIdentifier</key>
+	<string>$(PRODUCT_BUNDLE_IDENTIFIER)</string>
+	<key>CFBundleInfoDictionaryVersion</key>
+	<string>6.0</string>
+	<key>CFBundleName</key>
+	<string>wehealth</string>
+	<key>CFBundlePackageType</key>
+	<string>APPL</string>
+	<key>CFBundleShortVersionString</key>
+	<string>5.0.0</string>
+	<key>CFBundleSignature</key>
+	<string>????</string>
+	<key>CFBundleVersion</key>
+	<string>1</string>
+	<key>NSCameraUsageDescription</key>
+	<string>This app needs camera access to take photos</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>This app requires access to the photo library</string>
+	<key>LSRequiresIPhoneOS</key>
+	<true/>
+	<key>UIApplicationSupportsIndirectInputEvents</key>
+	<true/>
+	<key>UILaunchStoryboardName</key>
+	<string>LaunchScreen</string>
+	<key>UIMainStoryboardFile</key>
+	<string>Main</string>
+	<key>UIStatusBarHidden</key>
+	<false/>
+	<key>UISupportedInterfaceOrientations</key>
+	<array>
+		<string>UIInterfaceOrientationPortrait</string>
+		<string>UIInterfaceOrientationLandscapeLeft</string>
+		<string>UIInterfaceOrientationLandscapeRight</string>
+	</array>
+	<key>UISupportedInterfaceOrientations~ipad</key>
+	<array>
+		<string>UIInterfaceOrientationPortrait</string>
+		<string>UIInterfaceOrientationPortraitUpsideDown</string>
+		<string>UIInterfaceOrientationLandscapeLeft</string>
+		<string>UIInterfaceOrientationLandscapeRight</string>
+	</array>
+	<key>UIViewControllerBasedStatusBarAppearance</key>
+	<false/>
+</dict>
+</plist>

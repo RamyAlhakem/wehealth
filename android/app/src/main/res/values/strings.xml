@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- TODO: Create this folder and add these lines inorder to use the Facebook Login System  -->
+<resources>
+    <string name="facebook_app_id">2321364958015214</string>
+    <string name="fb_login_protocol_scheme">facebook_auth</string>
+    <string name="facebook_client_token">2e49752b04dcca3fde52507612b9c755</string>
+</resources>
+   

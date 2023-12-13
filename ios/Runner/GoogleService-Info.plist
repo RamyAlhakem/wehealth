@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>CLIENT_ID</key>
+	<string>358033428767-9abqggegnaut11sf74vsuhnq1o5ppf17.apps.googleusercontent.com</string>
+	<key>REVERSED_CLIENT_ID</key>
+	<string>com.googleusercontent.apps.358033428767-9abqggegnaut11sf74vsuhnq1o5ppf17</string>
+	<key>ANDROID_CLIENT_ID</key>
+	<string>358033428767-0om1l9cgbin2jrgftn883mf7hm5t0st2.apps.googleusercontent.com</string>
+	<key>API_KEY</key>
+	<string>AIzaSyB5JJPQ5tvRZCahqZeqzhb6AKgcyJcXtC0</string>
+	<key>GCM_SENDER_ID</key>
+	<string>358033428767</string>
+	<key>PLIST_VERSION</key>
+	<string>1</string>
+	<key>BUNDLE_ID</key>
+	<string>iheal-umch.chieff</string>
+	<key>PROJECT_ID</key>
+	<string>wehealth-223704</string>
+	<key>STORAGE_BUCKET</key>
+	<string>wehealth-223704.appspot.com</string>
+	<key>IS_ADS_ENABLED</key>
+	<false></false>
+	<key>IS_ANALYTICS_ENABLED</key>
+	<false></false>
+	<key>IS_APPINVITE_ENABLED</key>
+	<true></true>
+	<key>IS_GCM_ENABLED</key>
+	<true></true>
+	<key>IS_SIGNIN_ENABLED</key>
+	<true></true>
+	<key>GOOGLE_APP_ID</key>
+	<string>1:358033428767:ios:bfa914e50f96e6ce</string>
+	<key>DATABASE_URL</key>
+	<string>https://wehealth-223704.firebaseio.com</string>
+</dict>
+</plist>

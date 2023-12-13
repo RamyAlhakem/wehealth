@@ -1,0 +1,104 @@
+{
+  "project_info": {
+    "project_number": "358033428767",
+    "firebase_url": "https://wehealth-223704.firebaseio.com",
+    "project_id": "wehealth-223704",
+    "storage_bucket": "wehealth-223704.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:358033428767:android:9b606e2fb471664d",
+        "android_client_info": {
+          "package_name": "connected.healthcare.checkupasia"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "358033428767-0om1l9cgbin2jrgftn883mf7hm5t0st2.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "connected.healthcare.checkupasia",
+            "certificate_hash": "0f04004864f4802df74e5e913496c2524f834dc1"
+          }
+        },
+        {
+          "client_id": "358033428767-4uoc5ff33qjjhiv410k3nmmp762dlij4.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "connected.healthcare.checkupasia",
+            "certificate_hash": "30aabbcc7c03e547b589a0202bdfe0970a5ce944"
+          }
+        },
+        {
+          "client_id": "358033428767-d192h0riqov7ih0bjlk2hhg8dukv2ds7.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "connected.healthcare.checkupasia",
+            "certificate_hash": "50617a46432e521c575cd3eb4febccb7e49f0643"
+          }
+        },
+        {
+          "client_id": "358033428767-da0to701gjbfpkhpshgoc3pv4r44fqq7.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "connected.healthcare.checkupasia",
+            "certificate_hash": "568e33bcbc81c4ca0585925b231beffd749aa747"
+          }
+        },
+        {
+          "client_id": "358033428767-elor211kbafkpd7dm1jeih4oqj1kko3d.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "connected.healthcare.checkupasia",
+            "certificate_hash": "9e8be8a1c9ea2cbd7a4bb10d6d8dc2bba06b0d96"
+          }
+        },
+        {
+          "client_id": "358033428767-pnv4fmcaftu8vtet0kt2s4s8ii09p23r.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "connected.healthcare.checkupasia",
+            "certificate_hash": "bef508d76f6e5783f38f53d1223373274423c9a6"
+          }
+        },
+        {
+          "client_id": "358033428767-ppssci5r6fj62p6pm65bbghd15v2qse7.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "connected.healthcare.checkupasia",
+            "certificate_hash": "65bb5a4f4a1294796ba668fb9505c4df264d2e53"
+          }
+        },
+        {
+          "client_id": "358033428767-3nbrdl2kir0ofrsod8b0fkekfq7585vu.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAiBW6qvU_khAUsPdAApRIsdJS95uzdlQo"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "358033428767-3nbrdl2kir0ofrsod8b0fkekfq7585vu.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "358033428767-9abqggegnaut11sf74vsuhnq1o5ppf17.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "iheal-umch.chieff",
+                "app_store_id": "1370251043"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

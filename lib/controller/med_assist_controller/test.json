@@ -1,0 +1,106 @@
+[
+    {
+        "id": 19450,
+        "userID": 12856,
+        "enable": 1,
+        "activity": "sleepactivity",
+        "position": 1,
+        "insertionDateTime": "2023-03-04T15: 59: 23.000Z"
+    },
+    {
+        "id": 19451,
+        "userID": 12856,
+        "enable": 0,
+        "activity": "dietaryintake",
+        "position": 3,
+        "insertionDateTime": "2023-03-04T15: 59: 23.000Z"
+    },
+    {
+        "id": 19452,
+        "userID": 12856,
+        "enable": 1,
+        "activity": "bodymeasurement",
+        "position": 2,
+        "insertionDateTime": "2023-03-04T15: 59: 23.000Z"
+    },
+    {
+        "id": 19453,
+        "userID": 12856,
+        "enable": 0,
+        "activity": "medassist",
+        "position": 4,
+        "insertionDateTime": "2023-03-03T17: 59: 41.000Z"
+    },
+    {
+        "id": 19454,
+        "userID": 12856,
+        "enable": 0,
+        "activity": "bloodGlucose",
+        "position": 5,
+        "insertionDateTime": "2023-03-04T15: 54: 27.000Z"
+    },
+    {
+        "id": 19455,
+        "userID": 12856,
+        "enable": 1,
+        "activity": "bloodpressure",
+        "position": 6,
+        "insertionDateTime": "2023-03-03T19: 07: 02.000Z"
+    },
+    {
+        "id": 19456,
+        "userID": 12856,
+        "enable": 0,
+        "activity": "bodytemperature",
+        "position": 8,
+        "insertionDateTime": "2023-03-03T17: 59: 41.000Z"
+    },
+    {
+        "id": 19457,
+        "userID": 12856,
+        "enable": 0,
+        "activity": "heartrate",
+        "position": 7,
+        "insertionDateTime": "2023-03-03T17: 59: 41.000Z"
+    },
+    {
+        "id": 19458,
+        "userID": 12856,
+        "enable": 0,
+        "activity": "family",
+        "position": 10,
+        "insertionDateTime": "2023-03-04T16: 28: 19.000Z"
+    },
+    {
+        "id": 19459,
+        "userID": 12856,
+        "enable": 0,
+        "activity": "spo2",
+        "position": 9,
+        "insertionDateTime": "2023-03-04T16: 28: 19.000Z"
+    },
+    {
+        "id": 19460,
+        "userID": 12856,
+        "enable": 0,
+        "activity": "selfcheckin",
+        "position": 11,
+        "insertionDateTime": "2023-03-03T17: 59: 41.000Z"
+    },
+    {
+        "id": 19799,
+        "userID": 12856,
+        "enable": 0,
+        "activity": "selfcheckin",
+        "position": 12,
+        "insertionDateTime": "2023-01-31T19: 31: 58.000Z"
+    },
+    {
+        "id": 166159,
+        "userID": 12856,
+        "enable": 1,
+        "activity": "physicalactivity",
+        "position": 0,
+        "insertionDateTime": "2023-03-03T17: 59: 41.000Z"
+    }
+]
