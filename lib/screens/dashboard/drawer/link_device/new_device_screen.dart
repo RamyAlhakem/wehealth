@@ -1,6 +1,9 @@
+import 'dart:convert';
 import 'dart:io';
 
+import 'package:collection/collection.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_blue_plus/flutter_blue_plus.dart';
 import 'package:get/get.dart';
 import 'package:wehealth/controller/user_devices_controller/user_devices_controller.dart';
@@ -473,6 +476,8 @@ class BloodPresure extends StatefulWidget {
 
 class _BloodPresureState extends State<BloodPresure> {
   List<BluetoothDevice> devices = [];
+  static const readbloodpresure = MethodChannel("Blood_Presure");
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -538,12 +543,16 @@ class _BloodPresureState extends State<BloodPresure> {
               title: Text(devices[i].advName),
               subtitle: Text(devices[i].remoteId.toString()),
               trailing: ElevatedButton(
-                  onPressed: () {
-                    ConnectToDevice(devices[i]);
+                  onPressed: () async {
+                    // ConnectToDevice(devices[i]);
+
+                    await readbloodpresure.invokeMethod("ReadData");
+
                     Navigator.of(context)
                         .push(MaterialPageRoute(builder: (context) {
                       return DevicePage1(
                         devicename: devices[i].advName,
+                        device: devices[i],
                       );
                     }));
                   },
@@ -560,43 +569,289 @@ class _BloodPresureState extends State<BloodPresure> {
 
 class DevicePage1 extends StatefulWidget {
   final String devicename;
-  const DevicePage1({super.key, required this.devicename});
+  final BluetoothDevice device;
+  const DevicePage1(
+      {super.key, required this.devicename, required this.device});
 
   @override
   State<DevicePage1> createState() => _DevicePage1State();
 }
 
-class _DevicePage1State extends State<DevicePage1> {
+class _DevicePage1State extends State<DevicePage1>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+  late Animation<double> _animation;
+  List<int> values = [];
+  String pul = "";
+  String sys = "";
+  String dia = "";
+  static const getstored = MethodChannel("GetStoredRrecored");
+  List<dynamic> currentData = [];
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: Duration(milliseconds: 500),
+    )..repeat(reverse: true);
+    _animation = Tween<double>(begin: 1.0, end: 1.3).animate(
+      CurvedAnimation(parent: _controller, curve: Curves.easeInOut),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
         appBar: AppBar(
           title: Text(widget.devicename),
         ),
-        body: Column(
-          children: [
-            Container(
-              color: Colors.lightGreen,
-              width: 300,
-              height: 300,
-              child: CustomPaint(
-                foregroundPainter: LinePainter(),
+        body: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              SizedBox(
+                height: 60,
               ),
-            )
-          ],
+              sys == ""
+                  ? Image.asset("assets/images/blood presure.png")
+                  : Stack(
+                      children: [
+                        Container(
+                          width: 200,
+                          height: 200,
+                          decoration: const BoxDecoration(
+                              gradient: LinearGradient(colors: [
+                                Colors.blue,
+                                Colors.lightGreen,
+                                Colors.red,
+                                Colors.yellow,
+                              ]),
+                              color: Colors.blue,
+                              shape: BoxShape.circle),
+                        ),
+                        Positioned(
+                          top: 20,
+                          left: 20,
+                          child: Container(
+                            width: 160,
+                            height: 160,
+                            decoration: const BoxDecoration(
+                                color: Colors.white, shape: BoxShape.circle),
+                          ),
+                        ),
+                        Positioned(
+                            left: 65,
+                            top: 65,
+                            child: Text(
+                              "SYS",
+                              style: TextStyle(color: Colors.grey),
+                            )),
+                        Positioned(
+                            left: 108,
+                            top: 65,
+                            child: Text(
+                              "DIA",
+                              style: TextStyle(color: Colors.grey),
+                            )),
+                        Positioned(
+                            left: 140,
+                            top: 107,
+                            child: Text(
+                              "mmHg",
+                              style: TextStyle(fontSize: 9, color: Colors.grey),
+                            )),
+                        Positioned(
+                            left: 55,
+                            top: 80,
+                            child: Text(
+                              "$sys/$dia",
+                              style: const TextStyle(
+                                  color: Colors.red,
+                                  fontSize: 29,
+                                  fontWeight: FontWeight.bold,
+                                  fontStyle: FontStyle.italic),
+                            )),
+                        Positioned(
+                          left: 60,
+                          top: 130,
+                          child: Row(
+                            children: [
+                              AnimatedBuilder(
+                                animation: _animation,
+                                builder: (context, child) {
+                                  return Transform.scale(
+                                    scale: _animation.value,
+                                    child: Icon(
+                                      Icons.favorite_rounded,
+                                      color: Colors.red,
+                                      size: 30,
+                                    ),
+                                  );
+                                },
+                                // child: Icon(
+                                //   Icons.favorite_rounded,
+                                //   color: Colors.red,
+                                // ),
+                              ),
+                              SizedBox(
+                                width: 10,
+                              ),
+                              Text("$pul",
+                                  style: const TextStyle(
+                                    color: Colors.red,
+                                    fontSize: 25,
+                                    fontWeight: FontWeight.bold,
+                                  )),
+                            ],
+                          ),
+                        ),
+                        Positioned(
+                            top: 153,
+                            left: 100,
+                            child: Text(
+                              "pul".toUpperCase(),
+                              style:
+                                  TextStyle(fontSize: 12, color: Colors.grey),
+                            ))
+                      ],
+                    ),
+              SizedBox(
+                height: 150,
+              ),
+              ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                      shadowColor: Colors.blue,
+                      elevation: 15,
+                      padding: const EdgeInsets.symmetric(horizontal: 30),
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(30))),
+                  onPressed: () async {
+                    final dynamic storedrecored =
+                        await getstored.invokeMethod("getStoredDRecord");
+                    if (storedrecored != null) {
+                      setState(() {
+                        currentData = storedrecored;
+                        sys = currentData[0]["systole"].toString();
+                        dia = currentData[0]["dia"].toString();
+                        pul = currentData[0]["pul"].toString();
+
+                        // print(" new currentdata@@@@@@@@@@ $currentData");
+                        // print("${currentData[0]["systole"]}");
+                        // print("${currentData[0]["dia"]}");
+                        // print("${currentData[0]["pul"]}");
+                        // print(" animation value===>>${_animation.value}");
+                      });
+                    } else {
+                      print("storedrecored nullllllllll");
+                    }
+
+                    // readbloodpreure(widget.device);
+                  },
+                  child: Text(
+                    "Blood pressure measurement".toUpperCase(),
+                    style: TextStyle(
+                        shadows: [
+                          Shadow(
+                              color: Colors.black,
+                              offset: Offset(2, 2),
+                              blurRadius: 10)
+                        ],
+                        fontWeight: FontWeight.bold,
+                        fontStyle: FontStyle.italic),
+                  )),
+              const Spacer(),
+              Stack(
+                children: [
+                  ClipPath(
+                    clipper: MyCustomClipper(),
+                    child: Container(
+                      width: double.infinity,
+                      height: 150,
+                      color: Colors.blue,
+                    ),
+                  ),
+                  Positioned(
+                      left: 100,
+                      top: 85,
+                      child: TextButton(
+                          onPressed: () {},
+                          child: Text(
+                            "view full history",
+                            style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 22,
+                                fontWeight: FontWeight.bold,
+                                fontStyle: FontStyle.italic),
+                          )))
+                ],
+              )
+            ],
+          ),
         ));
+  }
+
+  readbloodpreure(BluetoothDevice device) async {
+    await device.connect();
+    device.mtu.listen((mtu) {
+      print("\n\n\n\n@MTU@@@$mtu\n\n\n\n");
+    });
+    List<BluetoothService> services = await device.discoverServices();
+    for (BluetoothService service in services) {
+      List<BluetoothCharacteristic> characteristics = service.characteristics;
+      for (BluetoothCharacteristic c in characteristics) {
+        await c.setNotifyValue(true);
+        if (c.properties.read) {
+          List<int> value = await c.read();
+          print("\n\n\n\n\n\n\n$value##@@@@#\n\n\n\n\n");
+          print('UUID=>   ${c.uuid}');
+        }
+
+        c.lastValueStream.listen((value) {
+          setState(() {
+            values = value;
+            print(" \n\n\n\n values ====>$values\n\n\n\n\n");
+
+            getpulheart(values);
+            // pul = getpulheart(values);
+          });
+        });
+      }
+    }
+  }
+
+  int getpulheart(List<int> data) {
+    print("data heart ==>$data");
+    String stringvalue = String.fromCharCodes(data);
+    print(" stringhvalue ==>$stringvalue");
+    List<String> parts = stringvalue.split('.');
+    print("parts ==>$parts");
+    if (parts.isNotEmpty) {
+      String pulsstring = parts.last;
+      int puls = int.tryParse(pulsstring) ?? 0;
+      return puls;
+    } else {
+      return 0;
+    }
   }
 }
 
-class LinePainter extends CustomPainter {
+class MyCustomClipper extends CustomClipper<Path> {
   @override
-  void paint(Canvas canvas, Size size) {
-    
+  getClip(Size size) {
+    Path path = Path();
+    path.lineTo(0, size.height);
+    path.quadraticBezierTo(size.width * 0.25, size.height - 140,
+        size.width * 0.50, size.height - 90);
+    path.quadraticBezierTo(
+        size.width * 0.75, size.height - 50, size.width, size.height - 130);
+    path.lineTo(size.width, 0);
+    path.lineTo(size.width, size.height);
+    path.lineTo(0, size.height);
+    return path;
   }
 
   @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) {
-   
-    return false;
+  bool shouldReclip(covariant CustomClipper oldClipper) {
+    return true;
   }
 }

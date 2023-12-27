@@ -51,7 +51,7 @@ dependencies:
   # pdfx: ^2.3.0
   flutter_native_splash: ^2.2.17
   permission_handler: ^10.2.0
-  flutter_blue_plus: ^1.30.3
+  flutter_blue_plus: ^1.30.5
   scroll_date_picker: ^3.6.1
   collection: ^1.17.0
   wakelock: ^0.6.2
@@ -81,7 +81,7 @@ flutter:
     - assets/images/
     - assets/icons/login/
     # - assets/icons/medicine_shape/
-    - assets/icons/shape/
+    # - assets/icons/shape/
     - assets/icons/home/
     - assets/icons/social/
     - assets/icons/devices/
