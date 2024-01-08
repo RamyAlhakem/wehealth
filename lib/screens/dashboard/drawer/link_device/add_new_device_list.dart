@@ -6,9 +6,11 @@ import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:flutter_blue_plus/flutter_blue_plus.dart';
 import 'package:get/get.dart';
+import 'package:provider/provider.dart';
 import 'package:wehealth/global/methods/methods.dart';
 import 'package:wehealth/global/styles/text_styles.dart';
 import 'package:wehealth/screens/dashboard/drawer/drawer_items.dart';
+import 'package:wehealth/screens/dashboard/drawer/link_device/ble/WeightHistoryController.dart';
 import 'package:wehealth/screens/dashboard/drawer/link_device/new_device_screen.dart';
 
 import '../../notifications/notification_screen.dart';
@@ -660,6 +662,10 @@ class _DevicepageState extends State<Devicepage> {
     }
   }
 
+  double get myupdateweight {
+    return myweight;
+  }
+
   double calculateWeightNew(List<int> data) {
     print("data2 =>${data[2]}");
     print("data3 =>${data[3]}");
@@ -754,11 +760,14 @@ class _DevicepageState extends State<Devicepage> {
               ))),
       body: Center(
         child: Column(
-          mainAxisAlignment: MainAxisAlignment.spaceAround,
+          mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Text(
               "My Weight:   $myweight",
               style: TextStyle(fontSize: 30, fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(
+              height: 250,
             ),
             ElevatedButton(
                 style: ElevatedButton.styleFrom(
@@ -770,6 +779,8 @@ class _DevicepageState extends State<Devicepage> {
                         borderRadius: BorderRadius.circular(30))),
                 onPressed: () {
                   ReadWeight(widget.device);
+                  Provider.of<WeightHistoryController>(context)
+                      .save(myupdateweight);
                 },
                 child: Text(
                   "step on the scale".toUpperCase(),
@@ -783,9 +794,76 @@ class _DevicepageState extends State<Devicepage> {
                       fontSize: 15,
                       fontWeight: FontWeight.bold,
                       fontStyle: FontStyle.italic),
+                )),
+            ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                    elevation: 15.0,
+                    shadowColor: Colors.blue,
+                    padding: const EdgeInsets.symmetric(horizontal: 150),
+                    backgroundColor: Colors.lightBlue,
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(30))),
+                onPressed: () {
+                  Navigator.of(context)
+                      .push(MaterialPageRoute(builder: (context) {
+                    return const WeightHistory();
+                  }));
+                },
+                child: const Text(
+                  "History",
+                  style: TextStyle(
+                      shadows: [
+                        Shadow(
+                            color: Colors.black,
+                            offset: Offset(2, 2),
+                            blurRadius: 10)
+                      ],
+                      fontSize: 15,
+                      fontWeight: FontWeight.bold,
+                      fontStyle: FontStyle.italic),
                 ))
           ],
         ),
+      ),
+    );
+  }
+}
+
+class WeightHistory extends StatefulWidget {
+  const WeightHistory({super.key});
+
+  @override
+  State<WeightHistory> createState() => _WeightHistoryState();
+}
+
+class _WeightHistoryState extends State<WeightHistory> {
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text("History"),
+      ),
+      body: Consumer<WeightHistoryController>(
+        builder: (context, weightcontroller, child) {
+          return ListView.separated(
+              itemBuilder: (context, i) {
+                return ListTile(
+                  title: const Text(""),
+                  subtitle: Row(
+                    children: [
+                      const Text("weight: "),
+                      Text(weightcontroller.updatehistory[i].toString())
+                    ],
+                  ),
+                );
+              },
+              separatorBuilder: (context, i) {
+                return const SizedBox(
+                  height: 50,
+                );
+              },
+              itemCount: weightcontroller.updatehistory.length);
+        },
       ),
     );
   }

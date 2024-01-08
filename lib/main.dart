@@ -5,10 +5,12 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:provider/provider.dart';
 import 'package:wehealth/controller/auth_controller/auth_controller.dart';
 import 'package:wehealth/screens/dashboard/dashboard_screen.dart';
 import 'package:get/get.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:wehealth/screens/dashboard/drawer/link_device/ble/HistoryController.dart';
 import 'controller/localization_controller.dart';
 import 'controller/theme_controller.dart';
 import 'getit_locator.dart' as getit_locator;
@@ -42,6 +44,10 @@ Future<void> main() async {
 
   await getit_locator.init(prefs, deviceInfo);
   Map<String, Map<String, String>> languages = await languageinit();
+  SystemChrome.setPreferredOrientations(<DeviceOrientation>[
+    DeviceOrientation.portraitUp,
+    DeviceOrientation.portraitDown,
+  ]);
   runApp(MyApp(languages: languages));
 }
 
@@ -51,41 +57,44 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ScreenUtilInit(
-      //designSize: const Size(360, 690),
-      minTextAdapt: true,
-      splitScreenMode: true,
-      builder: (context, child) {
-        return GetBuilder<ThemeController>(
-          builder: (themeController) {
-            return GetBuilder<LocalizationController>(
-              builder: (localizeController) {
-                return GetBuilder<AuthController>(builder: (authController) {
-                  return GetMaterialApp(
-                    debugShowCheckedModeBanner: false,
-                    title: 'WeHealth',
-                    themeMode: ThemeMode.system,
-                    theme: themeController.themeValue ? dark : light,
-                    locale: localizeController.locale,
-                    translations: Translate(languages: languages),
-                    fallbackLocale: Locale(
-                      AppConstant.languages[0].languageCode!,
-                      AppConstant.languages[0].countryCode,
-                    ),
-                    routes: routes,
-                    initialRoute:
-                        (authController.prefs.containsKey('user_token'))
-                            ? DashboardScreen.id
-                            : SigninScreen.id,
-                    home: child,
-                  );
-                });
-              },
-            );
-          },
-        );
-      },
-      child: const SigninScreen(),
+    return ChangeNotifierProvider(
+      create: (context) => HistoryController(),
+      child: ScreenUtilInit(
+        //designSize: const Size(360, 690),
+        minTextAdapt: true,
+        splitScreenMode: true,
+        builder: (context, child) {
+          return GetBuilder<ThemeController>(
+            builder: (themeController) {
+              return GetBuilder<LocalizationController>(
+                builder: (localizeController) {
+                  return GetBuilder<AuthController>(builder: (authController) {
+                    return GetMaterialApp(
+                      debugShowCheckedModeBanner: false,
+                      title: 'WeHealth',
+                      themeMode: ThemeMode.system,
+                      theme: themeController.themeValue ? dark : light,
+                      locale: localizeController.locale,
+                      translations: Translate(languages: languages),
+                      fallbackLocale: Locale(
+                        AppConstant.languages[0].languageCode!,
+                        AppConstant.languages[0].countryCode,
+                      ),
+                      routes: routes,
+                      initialRoute:
+                          (authController.prefs.containsKey('user_token'))
+                              ? DashboardScreen.id
+                              : SigninScreen.id,
+                      home: child,
+                    );
+                  });
+                },
+              );
+            },
+          );
+        },
+        child: const SigninScreen(),
+      ),
     );
   }
 }

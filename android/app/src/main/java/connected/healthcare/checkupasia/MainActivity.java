@@ -47,6 +47,7 @@ public class MainActivity extends FlutterActivity implements BPMProtocol.OnConne
     private static final String CHANNEL = "testingJavaCode";
     private static final String bloodchannel = "Blood_Presure";
     private static final String getstoredrecored = "GetStoredRrecored";
+    private  static  final String scandevice="Scan_Device";
     private BPMProtocol bpmProtocol; // Declare bpmProtocol
     private static DRecord storedDRecord;
 
@@ -84,6 +85,35 @@ public class MainActivity extends FlutterActivity implements BPMProtocol.OnConne
     @Override
     public void configureFlutterEngine(@NonNull FlutterEngine flutterEngine) {
         super.configureFlutterEngine(flutterEngine);
+
+        new MethodChannel(flutterEngine.getDartExecutor().getBinaryMessenger(), scandevice)
+                .setMethodCallHandler(new MethodCallHandler() {
+                    @Override
+                    public void onMethodCall(MethodCall call, Result result) {
+                        if (call.method.equals("ScanDevices")) {
+                            if (Global.bpmProtocol != null) {
+                                Log.d("ProtocolValue", "Global BPM Protocol: " + Global.bpmProtocol);
+                                Global.bpmProtocol.startScan(10);
+
+
+
+
+
+
+
+                                result.success(null);
+                            } else {
+                                Log.d("ProtocolValue", "Global BPM Protocol: " + Global.bpmProtocol);
+                                // Handle bpmProtocol not being initialized
+                                result.error("UNAVAILABLE", "BPMProtocol not initialized", null);
+                            }
+                        }
+                    }
+
+
+                });
+
+
 //
 
 
@@ -94,13 +124,13 @@ public class MainActivity extends FlutterActivity implements BPMProtocol.OnConne
                         if (call.method.equals("ReadData")) {
                             if (Global.bpmProtocol != null) {
                                 Log.d("ProtocolValue", "Global BPM Protocol: " + Global.bpmProtocol);
-
-                                Global.bpmProtocol.bond("DE:81:80:59:C0:6A");
-                                connect("DE:81:80:59:C0:6A");
+//                                Global.bpmProtocol.startScan(10);
+//                                Global.bpmProtocol.bond("DE:81:80:59:C0:6A");
+//                                connect("DE:81:80:59:C0:6A");
 
 
                                 Global.bpmProtocol.readHistorysOrCurrDataAndSyncTiming();
-                                Global.bpmProtocol.readLastData();
+//                                Global.bpmProtocol.readLastData();
 
 
 //                              int data= 66;
@@ -134,6 +164,11 @@ public class MainActivity extends FlutterActivity implements BPMProtocol.OnConne
                                                           map.put("systole", data.getSystole());
                                                           map.put("dia", data.getDia());
                                                           map.put("pul", data.getHr());
+                                                          map.put("day",data.getDay());
+                                                          map.put("month",data.getMonth());
+                                                          map.put("year",data.getYear());
+                                                          map.put("hour",data.getHour());
+                                                          map.put("mint",data.getMinute());
                                                           // Add more properties as needed
 
                                                           mDataList.add(map);
@@ -183,7 +218,21 @@ public class MainActivity extends FlutterActivity implements BPMProtocol.OnConne
     }
 
     @Override
-    public void onScanResult(String s, String s1, int i, BPMProtocol.DeviceType deviceType) {
+    public void onScanResult(String mac, String name, int i, BPMProtocol.DeviceType deviceType) {
+Log.d("onscanresult:","mac"+mac+"name"+name);
+//Global.bpmProtocol.startScan(10);
+        switch (deviceType) {
+            case DEVICE_TYPE_BPM_4G:
+                Global.bpmProtocol.bond(mac);
+                Global.bpmProtocol.connect(mac);
+
+                break;
+            case DEVICE_TYPE_BPM:
+                Global.bpmProtocol.bond(mac);
+
+                break;
+        }
+
 
     }
 

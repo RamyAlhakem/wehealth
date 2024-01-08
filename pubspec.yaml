@@ -57,6 +57,7 @@ dependencies:
   wakelock: ^0.6.2
   path: ^1.8.2
   file_picker: ^5.2.6
+  provider: ^6.1.1
   # pdf: ^3.9.0
   # flutter_blue_plus: ^1.4.0
 

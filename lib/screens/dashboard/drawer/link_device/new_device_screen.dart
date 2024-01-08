@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
@@ -10,9 +11,10 @@ import 'package:wehealth/controller/user_devices_controller/user_devices_control
 import 'package:wehealth/global/methods/methods.dart';
 import 'package:wehealth/global/styles/text_styles.dart';
 import 'package:wehealth/screens/dashboard/drawer/drawer_items.dart';
+import 'package:wehealth/screens/dashboard/drawer/link_device/ble/HistoryController.dart';
 import 'package:wehealth/screens/dashboard/drawer/link_device/widgets.dart';
 import 'package:wehealth/screens/dashboard/widgets/overlay_loading_indicator.dart';
-
+import 'package:provider/provider.dart';
 import '../../../../controller/google_fit_controller/google_fit_controller.dart';
 import '../../notifications/notification_screen.dart';
 
@@ -477,6 +479,12 @@ class BloodPresure extends StatefulWidget {
 class _BloodPresureState extends State<BloodPresure> {
   List<BluetoothDevice> devices = [];
   static const readbloodpresure = MethodChannel("Blood_Presure");
+  bool loading = false;
+  static const scandevice = MethodChannel("Scan_Device");
+
+  Future searchfordevice() async {
+    await scandevice.invokeMethod("ScanDevices");
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -485,7 +493,7 @@ class _BloodPresureState extends State<BloodPresure> {
         title: const Text("Blood pressure"),
         actions: [
           IconButton(
-              onPressed: () {
+              onPressed: () async {
                 FlutterBluePlus.startScan(timeout: const Duration(seconds: 15));
                 FlutterBluePlus.scanResults.listen((results) {
                   for (ScanResult r in results) {
@@ -498,6 +506,7 @@ class _BloodPresureState extends State<BloodPresure> {
                     }
                   }
                 });
+                searchfordevice();
               },
               icon: const Icon(Icons.search))
         ],
@@ -507,7 +516,7 @@ class _BloodPresureState extends State<BloodPresure> {
           builder: (context, snapshot) {
             if (snapshot.data == false) {
               return FloatingActionButton(
-                onPressed: () {
+                onPressed: () async {
                   FlutterBluePlus.startScan(
                       timeout: const Duration(seconds: 15));
                   FlutterBluePlus.scanResults.listen((results) {
@@ -521,6 +530,7 @@ class _BloodPresureState extends State<BloodPresure> {
                       }
                     }
                   });
+                  searchfordevice();
                 },
                 child: const Icon(Icons.search),
               );
@@ -547,16 +557,33 @@ class _BloodPresureState extends State<BloodPresure> {
                     // ConnectToDevice(devices[i]);
 
                     await readbloodpresure.invokeMethod("ReadData");
-
-                    Navigator.of(context)
-                        .push(MaterialPageRoute(builder: (context) {
-                      return DevicePage1(
-                        devicename: devices[i].advName,
-                        device: devices[i],
-                      );
-                    }));
+                    setState(() {
+                      loading = true;
+                    });
+                    Future.delayed(const Duration(seconds: 4), () {
+                      setState(() {
+                        loading = false;
+                        Provider.of<HistoryController>(context, listen: false)
+                            .enablebutton();
+                      });
+                      Navigator.of(context)
+                          .push(MaterialPageRoute(builder: (context) {
+                        return DevicePage1(
+                          devicename: devices[i].advName,
+                          device: devices[i],
+                        );
+                      }));
+                    });
                   },
-                  child: const Text("Connect")),
+                  child: loading
+                      ? Container(
+                          height: 18,
+                          width: 20,
+                          child: const CircularProgressIndicator(
+                            color: Colors.white,
+                          ),
+                        )
+                      : const Text("Connect")),
             );
           }),
     );
@@ -578,13 +605,24 @@ class DevicePage1 extends StatefulWidget {
 }
 
 class _DevicePage1State extends State<DevicePage1>
-    with SingleTickerProviderStateMixin {
+    with TickerProviderStateMixin {
+  late AnimationController _controller2;
+  late Animation _animation2;
   late AnimationController _controller;
+  late AnimationController _controller1;
+  late Animation _animation1;
   late Animation<double> _animation;
   List<int> values = [];
-  String pul = "";
-  String sys = "";
-  String dia = "";
+  int pul = 0;
+  int sys = 0;
+  int dia = 0;
+  double move = 0.0;
+  String result = "";
+  bool isnormal = true;
+  Color colorchange = Colors.grey;
+  double fontchange = 14;
+  late Timer _timer;
+
   static const getstored = MethodChannel("GetStoredRrecored");
   List<dynamic> currentData = [];
   @override
@@ -592,15 +630,31 @@ class _DevicePage1State extends State<DevicePage1>
     super.initState();
     _controller = AnimationController(
       vsync: this,
-      duration: Duration(milliseconds: 500),
+      duration: const Duration(milliseconds: 500),
     )..repeat(reverse: true);
-    _animation = Tween<double>(begin: 1.0, end: 1.3).animate(
+    _animation = Tween<double>(begin: 1.0, end: 1.2).animate(
       CurvedAnimation(parent: _controller, curve: Curves.easeInOut),
     );
+    _controller1 =
+        AnimationController(vsync: this, duration: const Duration(seconds: 2));
+
+    _animation1 = Tween(begin: 0.0, end: 1.1).animate(_controller1);
+    _controller2 = AnimationController(
+        vsync: this, duration: const Duration(seconds: 1000))
+      ..repeat(reverse: true);
+    _animation2 = Tween(begin: 50.0, end: 200.0).animate(_controller2);
+    // _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
+    //   setState(() {
+    //     colorchange = colorchange == Colors.grey ? Colors.red : Colors.grey;
+    //     fontchange = fontchange == 14 ? 7 : 14;
+    //   });
+    // });
   }
 
   @override
   Widget build(BuildContext context) {
+    final screenwidth = MediaQuery.of(context).size.width;
+    final screenheight = MediaQuery.of(context).size.height;
     return Scaffold(
         appBar: AppBar(
           title: Text(widget.devicename),
@@ -610,70 +664,124 @@ class _DevicePage1State extends State<DevicePage1>
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               SizedBox(
-                height: 60,
+                height: screenheight / 20,
               ),
-              sys == ""
-                  ? Image.asset("assets/images/blood presure.png")
+              AnimatedBuilder(
+                  animation: _animation1,
+                  builder: (context, child) {
+                    return Transform.scale(
+                      scale: _animation1.value,
+                      child: Text(
+                        result,
+                        style: TextStyle(
+                            fontSize: 40,
+                            fontWeight: FontWeight.bold,
+                            fontStyle: FontStyle.italic,
+                            color: isnormal ? Colors.green : Colors.red),
+                      ),
+                    );
+                  }),
+              SizedBox(
+                height: screenheight / 10,
+              ),
+              sys == 0
+                  ? Image.asset(
+                      "assets/images/blood presure.png",
+                      width: screenwidth,
+                      height: screenheight / 4,
+                    )
                   : Stack(
                       children: [
-                        Container(
-                          width: 200,
-                          height: 200,
-                          decoration: const BoxDecoration(
-                              gradient: LinearGradient(colors: [
-                                Colors.blue,
-                                Colors.lightGreen,
-                                Colors.red,
-                                Colors.yellow,
-                              ]),
-                              color: Colors.blue,
-                              shape: BoxShape.circle),
+                        AnimatedBuilder(
+                          builder: (context, child) {
+                            return Transform.rotate(
+                              angle: 3.14 / 2 * _animation2.value,
+                              child: Container(
+                                width: screenwidth / 1.2,
+                                height: screenheight / 3,
+                                decoration: const BoxDecoration(
+                                    gradient: LinearGradient(colors: [
+                                      Colors.blue,
+                                      Colors.lightGreen,
+                                      Colors.red,
+                                      Colors.yellow,
+                                    ]),
+                                    shape: BoxShape.circle),
+                              ),
+                            );
+                          },
+                          animation: _animation2,
                         ),
                         Positioned(
                           top: 20,
                           left: 20,
                           child: Container(
-                            width: 160,
-                            height: 160,
+                            width: screenwidth / 1.37,
+                            height: screenheight / 3.5,
                             decoration: const BoxDecoration(
                                 color: Colors.white, shape: BoxShape.circle),
                           ),
                         ),
                         Positioned(
-                            left: 65,
-                            top: 65,
-                            child: Text(
-                              "SYS",
-                              style: TextStyle(color: Colors.grey),
+                            left: screenwidth / 3.5,
+                            top: screenheight / 10,
+                            child: const AnimatedDefaultTextStyle(
+                              duration: Duration(seconds: 1),
+                              style:
+                                  TextStyle(color: Colors.grey, fontSize: 12),
+                              child: Text("SYS"),
                             )),
                         Positioned(
-                            left: 108,
-                            top: 65,
-                            child: Text(
-                              "DIA",
-                              style: TextStyle(color: Colors.grey),
+                            left: screenwidth / 2,
+                            top: screenheight / 10,
+                            child: const AnimatedDefaultTextStyle(
+                              duration: Duration(seconds: 1),
+                              style:
+                                  TextStyle(color: Colors.grey, fontSize: 12),
+                              child: Text("DIA"),
                             )),
                         Positioned(
-                            left: 140,
-                            top: 107,
-                            child: Text(
-                              "mmHg",
+                            left: screenwidth / 1.7,
+                            top: screenheight / 6.6,
+                            child: const AnimatedDefaultTextStyle(
+                              duration: Duration(seconds: 1),
                               style: TextStyle(fontSize: 9, color: Colors.grey),
+                              child: Text("mmHg"),
                             )),
                         Positioned(
-                            left: 55,
-                            top: 80,
-                            child: Text(
-                              "$sys/$dia",
-                              style: const TextStyle(
+                            left: screenwidth / 2.5,
+                            top: screenheight / 8.2,
+                            child: const Text(
+                              "/",
+                              style: TextStyle(
                                   color: Colors.red,
                                   fontSize: 29,
                                   fontWeight: FontWeight.bold,
                                   fontStyle: FontStyle.italic),
                             )),
                         Positioned(
-                          left: 60,
-                          top: 130,
+                            left: screenwidth / 3.9,
+                            top: screenheight / 8.5,
+                            child: Text(
+                              "$sys",
+                              style: const TextStyle(
+                                  color: Colors.blue,
+                                  fontSize: 30,
+                                  fontWeight: FontWeight.bold),
+                            )),
+                        Positioned(
+                            left: screenwidth / 2.1,
+                            top: screenheight / 8.5,
+                            child: Text(
+                              "$dia",
+                              style: const TextStyle(
+                                  color: Colors.blue,
+                                  fontSize: 30,
+                                  fontWeight: FontWeight.bold),
+                            )),
+                        Positioned(
+                          left: screenwidth / 3,
+                          top: screenheight / 5,
                           child: Row(
                             children: [
                               AnimatedBuilder(
@@ -681,104 +789,190 @@ class _DevicePage1State extends State<DevicePage1>
                                 builder: (context, child) {
                                   return Transform.scale(
                                     scale: _animation.value,
-                                    child: Icon(
+                                    child: const Icon(
                                       Icons.favorite_rounded,
                                       color: Colors.red,
                                       size: 30,
                                     ),
                                   );
                                 },
-                                // child: Icon(
-                                //   Icons.favorite_rounded,
-                                //   color: Colors.red,
-                                // ),
                               ),
-                              SizedBox(
+                              const SizedBox(
                                 width: 10,
                               ),
                               Text("$pul",
                                   style: const TextStyle(
-                                    color: Colors.red,
-                                    fontSize: 25,
+                                    color: Colors.blue,
+                                    fontSize: 30,
                                     fontWeight: FontWeight.bold,
                                   )),
                             ],
                           ),
                         ),
                         Positioned(
-                            top: 153,
-                            left: 100,
-                            child: Text(
-                              "pul".toUpperCase(),
+                            top: screenheight / 4.2,
+                            left: screenwidth / 2.2,
+                            child: const AnimatedDefaultTextStyle(
+                              duration: Duration(seconds: 1),
                               style:
                                   TextStyle(fontSize: 12, color: Colors.grey),
+                              child: Text("PUL"),
                             ))
                       ],
                     ),
-              SizedBox(
-                height: 150,
-              ),
-              ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                      shadowColor: Colors.blue,
-                      elevation: 15,
-                      padding: const EdgeInsets.symmetric(horizontal: 30),
-                      shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(30))),
-                  onPressed: () async {
-                    final dynamic storedrecored =
-                        await getstored.invokeMethod("getStoredDRecord");
-                    if (storedrecored != null) {
-                      setState(() {
-                        currentData = storedrecored;
-                        sys = currentData[0]["systole"].toString();
-                        dia = currentData[0]["dia"].toString();
-                        pul = currentData[0]["pul"].toString();
+              // SizedBox(
+              //   height: screenheight / 7,
+              // ),
+              // Expanded(
+              //   flex: 3,
+              //   child: ElevatedButton(
+              //       style: ElevatedButton.styleFrom(
+              //           shadowColor: Colors.blue,
+              //           elevation: 15,
+              //           padding: const EdgeInsets.symmetric(horizontal: 40),
+              //           shape: RoundedRectangleBorder(
+              //               borderRadius: BorderRadius.circular(30))),
+              //       onPressed: () async {
+              //         final dynamic storedrecored =
+              //             await getstored.invokeMethod("getStoredDRecord");
+              //         if (storedrecored != null) {
+              //           setState(() {
+              //             currentData = storedrecored;
+              //             sys = currentData[0]["systole"];
+              //             dia = currentData[0]["dia"];
+              //             pul = currentData[0]["pul"];
+              //             if (sys < 120 && dia < 80) {
+              //               result = "Excellent";
+              //               _controller1..forward();
+              //             } else {
+              //               result = "High pressure";
+              //               isnormal = false;
+              //               _controller1.forward();
+              //             }
+              //             Provider.of<HistoryController>(context, listen: false)
+              //                 .save(currentData[0]);
+              //             print("===================>>>${currentData[0]}");
 
-                        // print(" new currentdata@@@@@@@@@@ $currentData");
-                        // print("${currentData[0]["systole"]}");
-                        // print("${currentData[0]["dia"]}");
-                        // print("${currentData[0]["pul"]}");
-                        // print(" animation value===>>${_animation.value}");
-                      });
-                    } else {
-                      print("storedrecored nullllllllll");
-                    }
+              //             // print(" new currentdata@@@@@@@@@@ $currentData");
+              //             // print("${currentData[0]["systole"]}");
+              //             // print("${currentData[0]["dia"]}");
+              //             // print("${currentData[0]["pul"]}");
+              //             // print(" animation value===>>${_animation.value}");
+              //           });
+              //         } else {
+              //           print("storedrecored nullllllllll");
+              //         }
 
-                    // readbloodpreure(widget.device);
-                  },
-                  child: Text(
-                    "Blood pressure measurement".toUpperCase(),
-                    style: TextStyle(
-                        shadows: [
-                          Shadow(
-                              color: Colors.black,
-                              offset: Offset(2, 2),
-                              blurRadius: 10)
-                        ],
-                        fontWeight: FontWeight.bold,
-                        fontStyle: FontStyle.italic),
-                  )),
+              //         // readbloodpreure(widget.device);
+              //       },
+              //       child: Text(
+              //         "Blood pressure measurement".toUpperCase(),
+              //         style: const TextStyle(
+              //             shadows: [
+              //               Shadow(
+              //                   color: Colors.black,
+              //                   offset: Offset(2, 2),
+              //                   blurRadius: 10)
+              //             ],
+              //             fontWeight: FontWeight.bold,
+              //             fontStyle: FontStyle.italic),
+              //       )),
+              // ),
               const Spacer(),
               Stack(
                 children: [
                   ClipPath(
                     clipper: MyCustomClipper(),
                     child: Container(
-                      width: double.infinity,
-                      height: 150,
+                      width: screenwidth,
+                      height: screenheight / 3.5,
                       color: Colors.blue,
                     ),
                   ),
                   Positioned(
-                      left: 100,
-                      top: 85,
-                      child: TextButton(
-                          onPressed: () {},
-                          child: Text(
-                            "view full history",
+                      left: screenwidth / 2.2,
+                      top: screenheight / 6.5,
+                      child: ElevatedButton(
+                          style: ElevatedButton.styleFrom(
+                              shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(30)),
+                              backgroundColor: Colors.white,
+                              foregroundColor: Colors.blue),
+                          onPressed: Provider.of<HistoryController>(context)
+                                  .isenable
+                              ? () async {
+                                  final dynamic storedrecored = await getstored
+                                      .invokeMethod("getStoredDRecord");
+                                  if (storedrecored != null) {
+                                    setState(() {
+                                      currentData = storedrecored;
+                                      sys = currentData[0]["systole"];
+                                      dia = currentData[0]["dia"];
+                                      pul = currentData[0]["pul"];
+                                      if (sys < 120 && dia < 80) {
+                                        result = "Excellent";
+                                        _controller1..forward();
+                                      } else {
+                                        result = "High pressure";
+                                        isnormal = false;
+                                        _controller1.forward();
+                                      }
+                                      Provider.of<HistoryController>(context,
+                                              listen: false)
+                                          .save(currentData[0]);
+                                      Provider.of<HistoryController>(context,
+                                              listen: false)
+                                          .disablebutton();
+                                      Provider.of<HistoryController>(context,
+                                              listen: false)
+                                          .SaveData();
+
+                                      print(
+                                          "===================>>>${currentData[0]}");
+
+                                      print(
+                                          " new currentdata@@@@@@@@@@ $currentData");
+                                      print("${currentData[0]["systole"]}");
+                                      print("${currentData[0]["dia"]}");
+                                      print("${currentData[0]["pul"]}");
+                                      print(
+                                          " animation value===>>${_animation.value}");
+                                    });
+                                  } else {
+                                    print("storedrecored nullllllllll");
+                                  }
+
+                                  // readbloodpreure(widget.dev
+                                }
+                              : null,
+                          child: const Text(
+                            "Blood Presure",
                             style: TextStyle(
-                                color: Colors.white,
+                                fontSize: 22,
+                                fontWeight: FontWeight.bold,
+                                fontStyle: FontStyle.italic),
+                          ))),
+                  Positioned(
+                      left: screenwidth / 2.2,
+                      top: screenheight / 4.5,
+                      child: ElevatedButton(
+                          style: ElevatedButton.styleFrom(
+                              padding: EdgeInsets.symmetric(horizontal: 25),
+                              shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(30)),
+                              backgroundColor: Colors.white,
+                              foregroundColor: Colors.blue),
+                          onPressed: () {
+                            Navigator.of(context)
+                                .push(MaterialPageRoute(builder: (context) {
+                              return ViewFullHistory(
+                                datahistory: updatedata,
+                              );
+                            }));
+                          },
+                          child: const Text(
+                            "view  history",
+                            style: TextStyle(
                                 fontSize: 22,
                                 fontWeight: FontWeight.bold,
                                 fontStyle: FontStyle.italic),
@@ -790,49 +984,53 @@ class _DevicePage1State extends State<DevicePage1>
         ));
   }
 
-  readbloodpreure(BluetoothDevice device) async {
-    await device.connect();
-    device.mtu.listen((mtu) {
-      print("\n\n\n\n@MTU@@@$mtu\n\n\n\n");
-    });
-    List<BluetoothService> services = await device.discoverServices();
-    for (BluetoothService service in services) {
-      List<BluetoothCharacteristic> characteristics = service.characteristics;
-      for (BluetoothCharacteristic c in characteristics) {
-        await c.setNotifyValue(true);
-        if (c.properties.read) {
-          List<int> value = await c.read();
-          print("\n\n\n\n\n\n\n$value##@@@@#\n\n\n\n\n");
-          print('UUID=>   ${c.uuid}');
-        }
-
-        c.lastValueStream.listen((value) {
-          setState(() {
-            values = value;
-            print(" \n\n\n\n values ====>$values\n\n\n\n\n");
-
-            getpulheart(values);
-            // pul = getpulheart(values);
-          });
-        });
-      }
-    }
+  List get updatedata {
+    return currentData;
   }
 
-  int getpulheart(List<int> data) {
-    print("data heart ==>$data");
-    String stringvalue = String.fromCharCodes(data);
-    print(" stringhvalue ==>$stringvalue");
-    List<String> parts = stringvalue.split('.');
-    print("parts ==>$parts");
-    if (parts.isNotEmpty) {
-      String pulsstring = parts.last;
-      int puls = int.tryParse(pulsstring) ?? 0;
-      return puls;
-    } else {
-      return 0;
-    }
-  }
+  // readbloodpreure(BluetoothDevice device) async {
+  //   await device.connect();
+  //   device.mtu.listen((mtu) {
+  //     print("\n\n\n\n@MTU@@@$mtu\n\n\n\n");
+  //   });
+  //   List<BluetoothService> services = await device.discoverServices();
+  //   for (BluetoothService service in services) {
+  //     List<BluetoothCharacteristic> characteristics = service.characteristics;
+  //     for (BluetoothCharacteristic c in characteristics) {
+  //       await c.setNotifyValue(true);
+  //       if (c.properties.read) {
+  //         List<int> value = await c.read();
+  //         print("\n\n\n\n\n\n\n$value##@@@@#\n\n\n\n\n");
+  //         print('UUID=>   ${c.uuid}');
+  //       }
+
+  //       c.lastValueStream.listen((value) {
+  //         setState(() {
+  //           values = value;
+  //           print(" \n\n\n\n values ====>$values\n\n\n\n\n");
+
+  //           getpulheart(values);
+  //           // pul = getpulheart(values);
+  //         });
+  //       });
+  //     }
+  //   }
+  // }
+
+  // int getpulheart(List<int> data) {
+  //   print("data heart ==>$data");
+  //   String stringvalue = String.fromCharCodes(data);
+  //   print(" stringhvalue ==>$stringvalue");
+  //   List<String> parts = stringvalue.split('.');
+  //   print("parts ==>$parts");
+  //   if (parts.isNotEmpty) {
+  //     String pulsstring = parts.last;
+  //     int puls = int.tryParse(pulsstring) ?? 0;
+  //     return puls;
+  //   } else {
+  //     return 0;
+  //   }
+  // }
 }
 
 class MyCustomClipper extends CustomClipper<Path> {
@@ -840,10 +1038,10 @@ class MyCustomClipper extends CustomClipper<Path> {
   getClip(Size size) {
     Path path = Path();
     path.lineTo(0, size.height);
-    path.quadraticBezierTo(size.width * 0.25, size.height - 140,
-        size.width * 0.50, size.height - 90);
+    path.quadraticBezierTo(size.width * 0.25, size.height - 180,
+        size.width * 0.50, size.height - 140);
     path.quadraticBezierTo(
-        size.width * 0.75, size.height - 50, size.width, size.height - 130);
+        size.width * 0.75, size.height - 85, size.width, size.height - 215);
     path.lineTo(size.width, 0);
     path.lineTo(size.width, size.height);
     path.lineTo(0, size.height);
@@ -853,5 +1051,282 @@ class MyCustomClipper extends CustomClipper<Path> {
   @override
   bool shouldReclip(covariant CustomClipper oldClipper) {
     return true;
+  }
+}
+
+class ViewFullHistory extends StatefulWidget {
+  final List datahistory;
+  const ViewFullHistory({super.key, required this.datahistory});
+
+  @override
+  State<ViewFullHistory> createState() => _ViewFullHistoryState();
+}
+
+class _ViewFullHistoryState extends State<ViewFullHistory> {
+  @override
+  void initState() {
+    Provider.of<HistoryController>(context, listen: false).LoadData();
+    super.initState();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final screenwidth = MediaQuery.of(context).size.width;
+    final screenheight = MediaQuery.of(context).size.height;
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text("History"),
+        actions: [
+          IconButton(
+              onPressed: () {
+                setState(() {
+                  Provider.of<HistoryController>(context, listen: false)
+                      .clearhistory();
+                });
+              },
+              icon: const Icon(Icons.delete))
+        ],
+      ),
+      body: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 20),
+          child:
+              Consumer<HistoryController>(builder: (context, history, child) {
+            return Provider.of<HistoryController>(context).updatehistory.isEmpty
+                ? const Center(
+                    child: Text("Empty History"),
+                  )
+                : ListView.separated(
+                    physics: const BouncingScrollPhysics(),
+                    separatorBuilder: (context, i) {
+                      return const SizedBox(
+                        height: 40,
+                      );
+                    },
+                    itemCount: history.updatehistory.length,
+                    itemBuilder: (context, i) {
+                      return Stack(
+                        children: [
+                          Container(
+                            width: screenwidth,
+                            decoration: BoxDecoration(
+                              color: const Color.fromARGB(255, 216, 236, 232),
+                              border: Border(
+                                  right: BorderSide(
+                                      color: (history.updatehistory[i]
+                                                      ["systole"] >
+                                                  121 ||
+                                              history.updatehistory[i]["dia"] >
+                                                  80)
+                                          ? Colors.red
+                                          : Colors.green,
+                                      width: 15)),
+                            ),
+                            margin: const EdgeInsets.symmetric(horizontal: 10),
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 10, vertical: 10),
+                            child: Column(
+                              children: [
+                                Row(
+                                  children: [
+                                    const Text(
+                                      "Date: ",
+                                      style: TextStyle(
+                                          fontStyle: FontStyle.italic),
+                                    ),
+                                    Text(
+                                        "${history.updatehistory[i]["day"]}/${history.updatehistory[i]["month"]}/${history.updatehistory[i]["year"]}"),
+                                    SizedBox(
+                                      width: screenwidth / 4,
+                                    ),
+                                    const Text(
+                                      "Time: ",
+                                      style: TextStyle(
+                                          fontStyle: FontStyle.italic),
+                                    ),
+                                    Text(
+                                        "${history.updatehistory[i]["hour"]}:${history.updatehistory[i]["mint"]}")
+                                  ],
+                                ),
+                                const Divider(
+                                  color: Colors.black,
+                                ),
+                                Row(
+                                  children: [
+                                    const Text(
+                                      "SYS: ",
+                                      style: TextStyle(
+                                        fontSize: 13,
+                                      ),
+                                    ),
+                                    Text(
+                                      "${history.updatehistory[i]["systole"]} ",
+                                      style: const TextStyle(
+                                          fontSize: 20,
+                                          fontWeight: FontWeight.bold),
+                                    ),
+                                    const Text(
+                                      "mmHg",
+                                      style: TextStyle(fontSize: 9),
+                                    ),
+                                  ],
+                                ),
+                                Row(
+                                  children: [
+                                    const Text(
+                                      "DIA: ",
+                                      style: TextStyle(
+                                        fontSize: 13,
+                                      ),
+                                    ),
+                                    Text(
+                                      "${history.updatehistory[i]["dia"]} ",
+                                      style: const TextStyle(
+                                          fontSize: 20,
+                                          fontWeight: FontWeight.bold),
+                                    ),
+                                    const Text(
+                                      "mmHg",
+                                      style: TextStyle(fontSize: 9),
+                                    )
+                                  ],
+                                ),
+                                Row(
+                                  children: [
+                                    const Text(
+                                      "PUL: ",
+                                      style: TextStyle(fontSize: 13),
+                                    ),
+                                    Text(
+                                      "${history.updatehistory[i]["pul"]} ",
+                                      style: const TextStyle(
+                                          fontSize: 20,
+                                          fontWeight: FontWeight.bold),
+                                    ),
+                                    const Text(
+                                      "BPM",
+                                      style: TextStyle(fontSize: 9),
+                                    )
+                                  ],
+                                )
+                              ],
+                            ),
+                          ),
+                          Positioned(
+                              left: screenwidth / 2.1,
+                              top: screenheight / 15,
+                              child: Container(
+                                  color:
+                                      const Color.fromARGB(255, 216, 236, 232),
+                                  width: 150,
+                                  height: 100,
+                                  child: Image.asset("assets/images/eco81.png")
+                                  // CustomPaint(
+                                  //   foregroundPainter: Linnerpainter(),
+                                  // ),
+                                  )),
+
+                          // Positioned(
+                          //     left: screenwidth / 1.55,
+                          //     top: screenheight / 15.5,
+                          //     child: Icon(
+                          //       Icons.favorite_rounded,
+                          //       color: Colors.red,
+                          //       size: 40,
+                          //     ))
+                        ],
+                      );
+                      // ListTile(
+                      //   shape: RoundedRectangleBorder(
+                      //       borderRadius: BorderRadius.circular(30)),
+                      //   tileColor: const Color.fromARGB(255, 216, 236, 232),
+                      //   title: Row(
+                      //     children: [
+                      //       Text(
+                      //         "${history.updatehistory[i]["day"]}/${history.updatehistory[i]["month"]}/${history.updatehistory[i]["year"]}",
+                      //         style: const TextStyle(fontSize: 15),
+                      //       ),
+                      //       const SizedBox(
+                      //         width: 60,
+                      //       ),
+                      //       Text(
+                      //           "${history.updatehistory[i]["hour"]}:${history.updatehistory[i]["mint"]}")
+                      //     ],
+                      //   ),
+                      //   trailing: const Icon(
+                      //     Icons.done_rounded,
+                      //     color: Colors.green,
+                      //   ),
+                      //   leading: const Icon(
+                      //     Icons.favorite_rounded,
+                      //     color: Colors.blue,
+                      //   ),
+                      //   subtitle: SingleChildScrollView(
+                      //     scrollDirection: Axis.horizontal,
+                      //     child: Row(
+                      //       children: [
+                      //         const Text(
+                      //           "SYS ",
+                      //           style: TextStyle(color: Colors.grey, fontSize: 12),
+                      //         ),
+                      //         Text(
+                      //           "${history.updatehistory[i]["systole"]}",
+                      //           style: const TextStyle(
+                      //               fontSize: 18, fontWeight: FontWeight.bold),
+                      //         ),
+                      //         const Text(
+                      //           "mmHg",
+                      //           style: TextStyle(fontSize: 9, color: Colors.grey),
+                      //         ),
+                      //         const SizedBox(
+                      //           width: 10,
+                      //         ),
+                      //         const Text("DIA ",
+                      //             style:
+                      //                 TextStyle(color: Colors.grey, fontSize: 12)),
+                      //         Text("${history.updatehistory[i]["dia"]}",
+                      //             style: const TextStyle(
+                      //                 fontSize: 18, fontWeight: FontWeight.bold)),
+                      //         const Text(
+                      //           "mmHg",
+                      //           style: TextStyle(fontSize: 9, color: Colors.grey),
+                      //         ),
+                      //         const SizedBox(
+                      //           width: 10,
+                      //         ),
+                      //         const Text("PUL ",
+                      //             style:
+                      //                 TextStyle(color: Colors.grey, fontSize: 12)),
+                      //         Text("${history.updatehistory[i]["pul"]}",
+                      //             style: const TextStyle(
+                      //                 fontSize: 18, fontWeight: FontWeight.bold)),
+                      //         const Text(
+                      //           "BPM",
+                      //           style: TextStyle(fontSize: 9, color: Colors.grey),
+                      //         ),
+                      //       ],
+                      //     ),
+                      //   ),
+                      // );
+                    });
+          })),
+    );
+  }
+}
+
+class Linnerpainter extends CustomPainter {
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = Colors.red
+      ..strokeWidth = 2
+      ..strokeCap = StrokeCap.round;
+
+    canvas.drawLine(Offset(size.width * 1 / 6, size.height * 1 / 2),
+        Offset(size.width * 5 / 6, size.height * 1 / 2), paint);
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) {
+    return false;
   }
 }
