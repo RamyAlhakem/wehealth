@@ -3,10 +3,12 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_blue_plus/flutter_blue_plus.dart';
 import 'package:get/get.dart';
+import 'package:provider/provider.dart';
 import 'package:wehealth/controller/user_devices_controller/user_devices_controller.dart';
 import 'package:wehealth/global/methods/methods.dart';
 import 'package:wehealth/global/styles/text_styles.dart';
 import 'package:wehealth/screens/dashboard/drawer/drawer_items.dart';
+import 'package:wehealth/screens/dashboard/drawer/link_device/ble/ScaleController.dart';
 import 'package:wehealth/screens/dashboard/drawer/link_device/widgets.dart';
 import 'package:wehealth/screens/dashboard/widgets/overlay_loading_indicator.dart';
 
@@ -590,13 +592,11 @@ class _DevicePage1State extends State<DevicePage1> {
 
 class LinePainter extends CustomPainter {
   @override
-  void paint(Canvas canvas, Size size) {
-    
-  }
+  void paint(Canvas canvas, Size size) {}
 
   @override
   bool shouldRepaint(covariant CustomPainter oldDelegate) {
-   
     return false;
   }
 }
+

@@ -9,6 +9,7 @@ import 'package:wehealth/controller/auth_controller/auth_controller.dart';
 import 'package:wehealth/screens/dashboard/dashboard_screen.dart';
 import 'package:get/get.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:wehealth/screens/dashboard/drawer/link_device/ble/ScaleController.dart';
 import 'controller/localization_controller.dart';
 import 'controller/theme_controller.dart';
 import 'getit_locator.dart' as getit_locator;
@@ -19,6 +20,7 @@ import 'localization/translate.dart';
 import 'screens/auth/signin.dart';
 import 'theme/dark_theme.dart';
 import 'theme/light_theme.dart';
+import 'package:provider/provider.dart';
 
 Future<AndroidDeviceInfo?> initPlatformState() async {
   final DeviceInfoPlugin deviceInfoPlugin = DeviceInfoPlugin();
@@ -61,23 +63,25 @@ class MyApp extends StatelessWidget {
             return GetBuilder<LocalizationController>(
               builder: (localizeController) {
                 return GetBuilder<AuthController>(builder: (authController) {
-                  return GetMaterialApp(
-                    debugShowCheckedModeBanner: false,
-                    title: 'WeHealth',
-                    themeMode: ThemeMode.system,
-                    theme: themeController.themeValue ? dark : light,
-                    locale: localizeController.locale,
-                    translations: Translate(languages: languages),
-                    fallbackLocale: Locale(
-                      AppConstant.languages[0].languageCode!,
-                      AppConstant.languages[0].countryCode,
+                  return ChangeNotifierProvider(create: (context)=>ScaleController(),
+                    child: GetMaterialApp(
+                      debugShowCheckedModeBanner: false,
+                      title: 'WeHealth',
+                      themeMode: ThemeMode.system,
+                      theme: themeController.themeValue ? dark : light,
+                      locale: localizeController.locale,
+                      translations: Translate(languages: languages),
+                      fallbackLocale: Locale(
+                        AppConstant.languages[0].languageCode!,
+                        AppConstant.languages[0].countryCode,
+                      ),
+                      routes: routes,
+                      initialRoute:
+                          (authController.prefs.containsKey('user_token'))
+                              ? DashboardScreen.id
+                              : SigninScreen.id,
+                      home: child,
                     ),
-                    routes: routes,
-                    initialRoute:
-                        (authController.prefs.containsKey('user_token'))
-                            ? DashboardScreen.id
-                            : SigninScreen.id,
-                    home: child,
                   );
                 });
               },

@@ -6,9 +6,14 @@ import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:flutter_blue_plus/flutter_blue_plus.dart';
 import 'package:get/get.dart';
+import 'package:intl/intl.dart';
+import 'package:provider/provider.dart';
 import 'package:wehealth/global/methods/methods.dart';
 import 'package:wehealth/global/styles/text_styles.dart';
+import 'package:wehealth/models/data_model/user_msg_count.dart';
 import 'package:wehealth/screens/dashboard/drawer/drawer_items.dart';
+import 'package:wehealth/screens/dashboard/drawer/link_device/ble/ScaleController.dart';
+import 'package:wehealth/screens/dashboard/drawer/link_device/ble/WeightData.dart';
 import 'package:wehealth/screens/dashboard/drawer/link_device/new_device_screen.dart';
 
 import '../../notifications/notification_screen.dart';
@@ -660,6 +665,10 @@ class _DevicepageState extends State<Devicepage> {
     }
   }
 
+  List<WeightData> get mydata {
+    return currentdata;
+  }
+
   double calculateWeightNew(List<int> data) {
     print("data2 =>${data[2]}");
     print("data3 =>${data[3]}");
@@ -733,32 +742,61 @@ class _DevicepageState extends State<Devicepage> {
     super.initState();
   }
 
+  String getcurrentdate() {
+    DateTime now = DateTime.now();
+    String currentdate = "${now.day}/${now.month}/${now.year}";
+    return currentdate;
+  }
+
+  String getcurrenttime() {
+    DateTime now = DateTime.now();
+    String currenttime = "${now.hour}:${now.minute}:${now.second}";
+    return currenttime;
+  }
+
+  double get getweight {
+    return myweight;
+  }
+
+  List<WeightData> currentdata = [];
+  refilldata() {
+    currentdata.add(WeightData(
+        date: getcurrentdate(), time: getcurrenttime(), weight: getweight));
+  }
+
+  int i = 0;
+
   @override
   Widget build(BuildContext context) {
+    final screenwidth = MediaQuery.of(context).size.width;
+    final screenheight = MediaQuery.of(context).size.height;
     return Scaffold(
       appBar: AppBar(
           title: ListTile(
               title: Text(
                 widget.devicename,
-                style: TextStyle(
+                style: const TextStyle(
                     color: Colors.white,
                     fontSize: 15,
                     fontWeight: FontWeight.bold),
               ),
               trailing: Text(
                 CurrentConnectionState.toString().substring(25),
-                style: TextStyle(
+                style: const TextStyle(
                     color: Colors.white,
                     fontSize: 15,
                     fontWeight: FontWeight.bold),
               ))),
       body: Center(
         child: Column(
-          mainAxisAlignment: MainAxisAlignment.spaceAround,
+          mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Text(
               "My Weight:   $myweight",
-              style: TextStyle(fontSize: 30, fontWeight: FontWeight.bold),
+              style: const TextStyle(fontSize: 30, fontWeight: FontWeight.bold),
+            ),
+            SizedBox(
+              height: screenheight / 3,
             ),
             ElevatedButton(
                 style: ElevatedButton.styleFrom(
@@ -783,8 +821,185 @@ class _DevicepageState extends State<Devicepage> {
                       fontSize: 15,
                       fontWeight: FontWeight.bold,
                       fontStyle: FontStyle.italic),
+                )),
+            ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                    elevation: 15.0,
+                    shadowColor: Colors.blue,
+                    padding: const EdgeInsets.symmetric(horizontal: 158),
+                    backgroundColor: Colors.lightBlue,
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(30))),
+                onPressed: () {
+                  if (getweight == 0) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                          shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(30)),
+                          backgroundColor: Colors.blue,
+                          duration: const Duration(seconds: 3),
+                          content: const Text(
+                            "please step on the scale!!",
+                            style: TextStyle(fontSize: 18),
+                          )),
+                    );
+                  } else {
+                    setState(() {
+                      refilldata();
+
+                      Provider.of<ScaleController>(context, listen: false)
+                          .saveweight(mydata[i]);
+                      i++;
+                    });
+                  }
+                },
+                child: Text(
+                  "Save".toUpperCase(),
+                  style: const TextStyle(
+                      shadows: [
+                        Shadow(
+                            color: Colors.black,
+                            offset: Offset(2, 2),
+                            blurRadius: 10)
+                      ],
+                      fontSize: 15,
+                      fontWeight: FontWeight.bold,
+                      fontStyle: FontStyle.italic),
+                )),
+            ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                    elevation: 15.0,
+                    shadowColor: Colors.blue,
+                    padding: const EdgeInsets.symmetric(horizontal: 150),
+                    backgroundColor: Colors.lightBlue,
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(30))),
+                onPressed: () {
+                  Navigator.of(context)
+                      .push(MaterialPageRoute(builder: (context) {
+                    return const ScaleHistory();
+                  }));
+                },
+                child: const Text(
+                  "History",
+                  style: TextStyle(
+                      shadows: [
+                        Shadow(
+                            color: Colors.black,
+                            offset: Offset(2, 2),
+                            blurRadius: 10)
+                      ],
+                      fontSize: 15,
+                      fontWeight: FontWeight.bold,
+                      fontStyle: FontStyle.italic),
                 ))
           ],
+        ),
+      ),
+    );
+  }
+}
+
+class ScaleHistory extends StatefulWidget {
+  const ScaleHistory({super.key});
+
+  @override
+  State<ScaleHistory> createState() => _ScaleHistoryState();
+}
+
+class _ScaleHistoryState extends State<ScaleHistory> {
+  String getcurrentdate() {
+    DateTime now = DateTime.now();
+    String currentdate = "${now.day}/${now.month}/${now.year}";
+    return currentdate;
+  }
+
+  String getcurrenttime() {
+    DateTime now = DateTime.now();
+    String currenttime = "${now.hour}:${now.minute}:${now.second}";
+    return currenttime;
+  }
+
+  String getnameday() {
+    DateTime now = DateTime.now();
+    String currentday = DateFormat("E").format(now);
+    return currentday;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text("History"),
+        actions: [
+          IconButton(
+              onPressed: () {
+                Provider.of<ScaleController>(context, listen: false).clear();
+              },
+              icon: const Icon(Icons.delete))
+        ],
+      ),
+      body: Padding(
+        padding: const EdgeInsets.all(15),
+        child: Consumer<ScaleController>(
+          builder: (context, controller, child) {
+            return ListView.separated(
+                physics: const BouncingScrollPhysics(),
+                itemBuilder: (context, i) {
+                  return ListTile(
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10)),
+                    title: Row(
+                      children: [
+                        // const Text(
+                        //   "Date: ",
+                        //   style: TextStyle(fontStyle: FontStyle.italic),
+                        // ),
+                        Text(controller.updateweight[i].date.toString()),
+                        const SizedBox(
+                          width: 60,
+                        ),
+                        // const Text(
+                        //   "Time: ",
+                        //   style: TextStyle(fontStyle: FontStyle.italic),
+                        // ),
+                        Text(controller.updateweight[i].time.toString())
+                      ],
+                    ),
+                    tileColor: const Color.fromARGB(255, 230, 239, 243),
+                    subtitle: Row(
+                      children: [
+                        const Text("Weight: "),
+                        Text(
+                          "${controller.updateweight[i].weight} ",
+                          style: const TextStyle(
+                              fontSize: 20, fontWeight: FontWeight.bold),
+                        ),
+                        const Text("Kg")
+                      ],
+                    ),
+                    leading: Image.asset(
+                      "assets/images/scale weight.jpg",
+                      width: 50,
+                      height: 50,
+                    ),
+                    trailing: CircleAvatar(
+                        backgroundColor: Color.fromARGB(255, 180, 212, 238),
+                        child: Text(
+                          getnameday(),
+                          style: const TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontStyle: FontStyle.italic),
+                        )),
+                  );
+                },
+                separatorBuilder: (context, i) {
+                  return const SizedBox(
+                    height: 50,
+                  );
+                },
+                itemCount: controller.updateweight.length);
+          },
         ),
       ),
     );
