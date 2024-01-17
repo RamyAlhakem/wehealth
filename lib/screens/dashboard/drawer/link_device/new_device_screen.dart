@@ -576,7 +576,7 @@ class _DevicePage1State extends State<DevicePage1> {
         body: Column(
           children: [
             Container(
-              color: Colors.,
+              color: Colors.red,
               width: 300,
               height: 300,
             )
