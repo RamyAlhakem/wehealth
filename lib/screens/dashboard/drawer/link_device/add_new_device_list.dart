@@ -573,32 +573,35 @@ class _WeightScaleState extends State<WeightScale> {
                 );
               }
             }),
-        body: ListView.builder(
-            itemCount: devices.length,
-            itemBuilder: (context, i) {
-              return ListTile(
-                // ignore: deprecated_member_use
-                title: Text(devices[i].advName),
-                subtitle: Text(devices[i].remoteId.toString()),
-                trailing: ElevatedButton(
-                    onPressed: () {
-                      connectToDevice(devices[i]);
-                      Navigator.of(context)
-                          .push(MaterialPageRoute(builder: (context) {
-                        return Devicepage(
-                          devicename: devices[i].advName,
-                          device: devices[i],
-                        );
-                      }));
-                    },
-                    child: const Text(
-                      "Connect",
-                      style: TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontStyle: FontStyle.italic),
-                    )),
-              );
-            }));
+        body: Visibility(
+          visible: false,
+          child: ListView.builder(
+              itemCount: devices.length,
+              itemBuilder: (context, i) {
+                return ListTile(
+                  // ignore: deprecated_member_use
+                  title: Text(devices[i].advName),
+                  subtitle: Text(devices[i].remoteId.toString()),
+                  trailing: ElevatedButton(
+                      onPressed: () {
+                        connectToDevice(devices[i]);
+                        Navigator.of(context)
+                            .push(MaterialPageRoute(builder: (context) {
+                          return Devicepage(
+                            devicename: devices[i].advName,
+                            device: devices[i],
+                          );
+                        }));
+                      },
+                      child: const Text(
+                        "Connect",
+                        style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontStyle: FontStyle.italic),
+                      )),
+                );
+              }),
+        ));
   }
 }
 

@@ -55,6 +55,7 @@ class BloodPressureController extends GetxController {
         currentSortedList = await compute<List<BPData>, List<BPData>>(
           sortBpDataByDate,
           (response.bpData!),
+          
         );
         update();
       }
@@ -63,6 +64,9 @@ class BloodPressureController extends GetxController {
     }
   }
 
+List <BPData> currentData (){
+  return currentSortedList;
+}
   Future addBpData({
     required BuildContext context,
     required int systolic,

@@ -1,18 +1,23 @@
 // ignore_for_file: avoid_print
+import 'dart:convert';
 import 'dart:developer';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
 import 'package:wehealth/controller/blood_pressure_controller/blood_pressure_controller.dart';
+import 'package:wehealth/screens/dashboard/drawer/link_device/ble/Helper.dart';
 import 'package:wehealth/screens/dashboard/widgets/drawer_notification_scaffold.dart';
 import 'package:wehealth/screens/dashboard/widgets/horizontal_text_field.dart';
 import 'package:wehealth/screens/dashboard/widgets/overlay_loading_indicator.dart';
 import '../widgets/scrolling_date_picker.dart';
+import 'package:dio/dio.dart';
 
 class ManualBloodPressureWidget extends StatefulWidget {
-  const ManualBloodPressureWidget({
-    Key? key,
-  }) : super(key: key);
+  final int? sys;
+  final int? dia;
+  final int? pul;
+  const ManualBloodPressureWidget({Key? key, this.sys, this.dia, this.pul})
+      : super(key: key);
 
   @override
   State<ManualBloodPressureWidget> createState() =>
@@ -35,6 +40,9 @@ class _ManualBloodPressureWidgetState extends State<ManualBloodPressureWidget> {
   void initState() {
     super.initState();
     recordTimeCon.text = dayFormat.format(DateTime.now());
+    systolicCon.text = widget.sys.toString();
+    diastolicCon.text = widget.dia.toString();
+    pulseCon.text = widget.pul.toString();
   }
 
   bpDataValidateFunction() async {
@@ -56,6 +64,7 @@ class _ManualBloodPressureWidgetState extends State<ManualBloodPressureWidget> {
   }
 
   final pageColor = Colors.orange.shade700;
+  Dio dio = new Dio();
 
   @override
   Widget build(BuildContext context) {
@@ -239,9 +248,7 @@ class _ManualBloodPressureWidgetState extends State<ManualBloodPressureWidget> {
               child: Text(
                 "SAVE",
                 style: TextStyle(
-                  fontWeight: FontWeight.bold,
-                   color: Colors.orange.shade700
-                ),
+                    fontWeight: FontWeight.bold, color: Colors.orange.shade700),
               ),
             ),
           ),

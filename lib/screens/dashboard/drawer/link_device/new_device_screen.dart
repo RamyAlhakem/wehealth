@@ -1,16 +1,20 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
-
+import 'package:http/http.dart ' as http;
 import 'package:collection/collection.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_blue_plus/flutter_blue_plus.dart';
 import 'package:get/get.dart';
+import 'package:wehealth/controller/blood_pressure_controller/blood_pressure_controller.dart';
 import 'package:wehealth/controller/user_devices_controller/user_devices_controller.dart';
 import 'package:wehealth/global/methods/methods.dart';
 import 'package:wehealth/global/styles/text_styles.dart';
+import 'package:wehealth/models/data_model/user_bp_model.dart';
+import 'package:wehealth/screens/dashboard/blood_pressure/manual_blood_pressure.dart';
 import 'package:wehealth/screens/dashboard/drawer/drawer_items.dart';
+import 'package:wehealth/screens/dashboard/drawer/link_device/ble/Helper.dart';
 import 'package:wehealth/screens/dashboard/drawer/link_device/ble/HistoryController.dart';
 import 'package:wehealth/screens/dashboard/drawer/link_device/widgets.dart';
 import 'package:wehealth/screens/dashboard/widgets/overlay_loading_indicator.dart';
@@ -478,7 +482,17 @@ class BloodPresure extends StatefulWidget {
 
 class _BloodPresureState extends State<BloodPresure> {
   List<BluetoothDevice> devices = [];
+
+  List<BluetoothDevice> get getdevices {
+    return devices;
+  }
+
   static const readbloodpresure = MethodChannel("Blood_Presure");
+  static const getstored = MethodChannel("GetStoredRrecored");
+  int pul = 0;
+  int sys = 0;
+  int dia = 0;
+  List<dynamic> currentdata = [];
   bool loading = false;
   static const scandevice = MethodChannel("Scan_Device");
 
@@ -557,22 +571,38 @@ class _BloodPresureState extends State<BloodPresure> {
                     // ConnectToDevice(devices[i]);
 
                     await readbloodpresure.invokeMethod("ReadData");
+
                     setState(() {
                       loading = true;
                     });
-                    Future.delayed(const Duration(seconds: 4), () {
+                    Future.delayed(const Duration(seconds: 4), () async {
                       setState(() {
                         loading = false;
                         Provider.of<HistoryController>(context, listen: false)
                             .enablebutton();
                       });
-                      Navigator.of(context)
-                          .push(MaterialPageRoute(builder: (context) {
-                        return DevicePage1(
-                          devicename: devices[i].advName,
-                          device: devices[i],
-                        );
-                      }));
+                      final dynamic storedrecored =
+                          await getstored.invokeMethod("getStoredDRecord");
+                      setState(() {
+                        if (storedrecored != null) {
+                          currentdata = storedrecored;
+                          sys = currentdata[0]["systole"];
+                          dia = currentdata[0]["dia"];
+                          pul = currentdata[0]["pul"];
+                        }
+                      });
+                      Get.to(() => ManualBloodPressureWidget(
+                            sys: sys,
+                            dia: dia,
+                            pul: pul,
+                          ));
+                      // Navigator.of(context)
+                      //     .push(MaterialPageRoute(builder: (context) {
+                      //   return DevicePage1(
+                      //     devicename: devices[i].advName,
+                      //     device: devices[i],
+                      //   );
+                      // }));
                     });
                   },
                   child: loading
@@ -926,6 +956,9 @@ class _DevicePage1State extends State<DevicePage1>
                                       Provider.of<HistoryController>(context,
                                               listen: false)
                                           .SaveData();
+                                      Provider.of<HistoryController>(context,
+                                              listen: false)
+                                          .postdata();
 
                                       print(
                                           "===================>>>${currentData[0]}");
@@ -941,6 +974,7 @@ class _DevicePage1State extends State<DevicePage1>
                                   } else {
                                     print("storedrecored nullllllllll");
                                   }
+                                  // Helper.log("done", color: DebugColor.yellow);
 
                                   // readbloodpreure(widget.dev
                                 }
@@ -965,9 +999,7 @@ class _DevicePage1State extends State<DevicePage1>
                           onPressed: () {
                             Navigator.of(context)
                                 .push(MaterialPageRoute(builder: (context) {
-                              return ViewFullHistory(
-                                datahistory: updatedata,
-                              );
+                              return ViewFullHistory();
                             }));
                           },
                           child: const Text(
@@ -984,9 +1016,9 @@ class _DevicePage1State extends State<DevicePage1>
         ));
   }
 
-  List get updatedata {
-    return currentData;
-  }
+  // List get updatedata {
+  //   return currentData;
+  // }
 
   // readbloodpreure(BluetoothDevice device) async {
   //   await device.connect();
@@ -1055,18 +1087,28 @@ class MyCustomClipper extends CustomClipper<Path> {
 }
 
 class ViewFullHistory extends StatefulWidget {
-  final List datahistory;
-  const ViewFullHistory({super.key, required this.datahistory});
+  const ViewFullHistory({
+    super.key,
+  });
 
   @override
   State<ViewFullHistory> createState() => _ViewFullHistoryState();
 }
 
 class _ViewFullHistoryState extends State<ViewFullHistory> {
+  List<BPData> currentdata = [];
   @override
   void initState() {
-    Provider.of<HistoryController>(context, listen: false).LoadData();
-    super.initState();
+    Get.put(BloodPressureController()).fetchUserBloodPressureHistory();
+    Get.find<BloodPressureController>().fetchUserBloodPressureHistory();
+    Get.put(BloodPressureController()).currentData();
+    setState(() {
+      currentdata = BloodPressureController().currentData();
+      print("currentdata ==>${currentdata}");
+      print("currentdata ==>${BloodPressureController().currentSortedList}");
+    });
+    // Provider.of<HistoryController>(context, listen: false).LoadData();
+    // super.initState();
   }
 
   @override
@@ -1076,22 +1118,22 @@ class _ViewFullHistoryState extends State<ViewFullHistory> {
     return Scaffold(
       appBar: AppBar(
         title: const Text("History"),
-        actions: [
-          IconButton(
-              onPressed: () {
-                setState(() {
-                  Provider.of<HistoryController>(context, listen: false)
-                      .clearhistory();
-                });
-              },
-              icon: const Icon(Icons.delete))
-        ],
+        // actions: [
+        //   IconButton(
+        //       onPressed: () {
+        //         setState(() {
+        //           Provider.of<HistoryController>(context, listen: false)
+        //               .clearhistory();
+        //         });
+        //       },
+        //       icon: const Icon(Icons.delete))
+        // ],
       ),
       body: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 20),
           child:
               Consumer<HistoryController>(builder: (context, history, child) {
-            return Provider.of<HistoryController>(context).updatehistory.isEmpty
+            return currentdata.isEmpty
                 ? const Center(
                     child: Text("Empty History"),
                   )
@@ -1102,7 +1144,7 @@ class _ViewFullHistoryState extends State<ViewFullHistory> {
                         height: 40,
                       );
                     },
-                    itemCount: history.updatehistory.length,
+                    itemCount: currentdata.length,
                     itemBuilder: (context, i) {
                       return Stack(
                         children: [
@@ -1159,7 +1201,7 @@ class _ViewFullHistoryState extends State<ViewFullHistory> {
                                       ),
                                     ),
                                     Text(
-                                      "${history.updatehistory[i]["systole"]} ",
+                                      "${currentdata[i].systolic}",
                                       style: const TextStyle(
                                           fontSize: 20,
                                           fontWeight: FontWeight.bold),
@@ -1179,7 +1221,7 @@ class _ViewFullHistoryState extends State<ViewFullHistory> {
                                       ),
                                     ),
                                     Text(
-                                      "${history.updatehistory[i]["dia"]} ",
+                                      "${currentdata[i].diastolic} ",
                                       style: const TextStyle(
                                           fontSize: 20,
                                           fontWeight: FontWeight.bold),
@@ -1197,7 +1239,7 @@ class _ViewFullHistoryState extends State<ViewFullHistory> {
                                       style: TextStyle(fontSize: 13),
                                     ),
                                     Text(
-                                      "${history.updatehistory[i]["pul"]} ",
+                                      "${currentdata[i].pulserate} ",
                                       style: const TextStyle(
                                           fontSize: 20,
                                           fontWeight: FontWeight.bold),
