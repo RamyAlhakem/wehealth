@@ -75,7 +75,7 @@ class _BodyWeightDashboardTabState extends State<BodyWeightDashboardTab> {
                 iconPath: 'assets/icons/mnu_bweight_l.webp',
                 onAddClick: (){
             
-                  Get.to(()=> const ManualBodyWeightWidget());
+                  Get.to(()=>  ManualBodyWeightWidget());
             
                 },
               ),

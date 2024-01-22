@@ -11,6 +11,7 @@ import 'package:provider/provider.dart';
 import 'package:wehealth/global/methods/methods.dart';
 import 'package:wehealth/global/styles/text_styles.dart';
 import 'package:wehealth/models/data_model/user_msg_count.dart';
+import 'package:wehealth/screens/dashboard/body_measurements/body_weight/add_manual_body_weight.dart';
 import 'package:wehealth/screens/dashboard/drawer/drawer_items.dart';
 import 'package:wehealth/screens/dashboard/drawer/link_device/ble/ScaleController.dart';
 import 'package:wehealth/screens/dashboard/drawer/link_device/ble/WeightData.dart';
@@ -586,9 +587,12 @@ class _WeightScaleState extends State<WeightScale> {
                 trailing: ElevatedButton(
                     onPressed: () {
                       connectToDevice(devices[i]);
+                      // Get.to (const ManualBodyWeightWidget());
                       Navigator.of(context)
                           .push(MaterialPageRoute(builder: (context) {
-                        return Devicepage(
+                        return
+                            //  ManualBodyWeightWidget(device: devices[i],);
+                            Devicepage(
                           devicename: devices[i].advName,
                           device: devices[i],
                         );
@@ -849,6 +853,11 @@ class _DevicepageState extends State<Devicepage> {
 
                       Provider.of<ScaleController>(context, listen: false)
                           .saveweight(mydata[i]);
+                      Navigator.of(context)
+                          .push(MaterialPageRoute(builder: (context) {
+                        return ManualBodyWeightWidget(weight: getweight,);
+                      }));
+
                       i++;
                     });
                   }
